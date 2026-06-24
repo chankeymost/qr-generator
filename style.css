@@ -148,7 +148,7 @@ button, input, select, textarea{
   border: 1.5px solid var(--ink);
   border-radius: 8px;
   overflow: hidden;
-  width: fit-content;
+  width: 100%;
 }
 .tab{
   background: transparent;
@@ -161,6 +161,8 @@ button, input, select, textarea{
   cursor: pointer;
   color: var(--ink);
   transition: background 0.15s ease, color 0.15s ease;
+  flex: 1;
+  text-align: center;
 }
 .tab + .tab{ border-left: 1.5px solid var(--ink); }
 .tab.is-active{

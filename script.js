@@ -2,7 +2,6 @@
   "use strict";
 
   // ---------- ELEMENT REFS ----------
-  const form = document.getElementById("qr-form");
   const tabs = document.querySelectorAll(".tab");
   const fieldUrl = document.querySelector('[data-field="url"]');
   const fieldText = document.querySelector('[data-field="text"]');
@@ -17,7 +16,6 @@
   const bgHexLabel = document.getElementById("input-bg-hex");
   const errorMsg = document.getElementById("error-msg");
 
-  const previewFrame = document.getElementById("preview-frame");
   const emptyState = document.getElementById("empty-state");
   const qrWrap = document.getElementById("qr-canvas-wrap");
   const scanLine = document.getElementById("scan-line");
@@ -26,8 +24,15 @@
   const btnDownload = document.getElementById("btn-download");
 
   let mode = "url";
-  let qrInstance = null;
-  let lastSourceLabel = "";
+
+  // ---------- DEBOUNCE ----------
+  function debounce(fn, delay) {
+    let timer;
+    return function (...args) {
+      clearTimeout(timer);
+      timer = setTimeout(() => fn.apply(this, args), delay);
+    };
+  }
 
   // ---------- TAB SWITCHING ----------
   tabs.forEach((tab) => {
@@ -44,6 +49,7 @@
         fieldUrl.classList.add("is-hidden");
       }
       clearError();
+      updateQR();
     });
   });
 
@@ -76,7 +82,6 @@
       value = "https://" + value;
     }
     try {
-      // Validate basic URL structure
       new URL(value);
       return value;
     } catch (e) {
@@ -95,44 +100,8 @@
 
   function truncateLabel(str, max) {
     if (str.length <= max) return str;
-    return str.slice(0, max - 1) + "…";
+    return str.slice(0, max - 1) + "\u2026";
   }
-
-  // ---------- GENERATE ----------
-  form.addEventListener("submit", function (e) {
-    e.preventDefault();
-    clearError();
-
-    let dataToEncode = "";
-    let sourceLabel = "";
-
-    if (mode === "url") {
-      const normalized = normalizeUrl(inputUrl.value);
-      if (!normalized) {
-        showError("Masukkan alamat URL yang valid, contoh: contoh.com/halaman");
-        inputUrl.focus();
-        return;
-      }
-      dataToEncode = normalized;
-      sourceLabel = normalized;
-    } else {
-      const text = inputText.value.trim();
-      if (!text) {
-        showError("Tulis teks yang ingin diubah menjadi QR code.");
-        inputText.focus();
-        return;
-      }
-      dataToEncode = text;
-      sourceLabel = text.replace(/\s+/g, " ");
-    }
-
-    generateQR(dataToEncode);
-    lastSourceLabel = sourceLabel;
-
-    previewSource.innerHTML =
-      '<b>' + (mode === "url" ? "URL" : "Teks") + '</b>' +
-      escapeHtml(truncateLabel(sourceLabel, 46));
-  });
 
   function escapeHtml(str) {
     const div = document.createElement("div");
@@ -140,17 +109,44 @@
     return div.innerHTML;
   }
 
-  function generateQR(data) {
+  // ---------- GET CURRENT INPUT DATA ----------
+  function getCurrentData() {
+    clearError();
+    if (mode === "url") {
+      const raw = inputUrl.value;
+      if (!raw.trim()) return null;
+      const normalized = normalizeUrl(raw);
+      if (!normalized) {
+        showError("Masukkan alamat URL yang valid, contoh: contoh.com/halaman");
+        return null;
+      }
+      return { data: normalized, label: normalized };
+    }
+    const text = inputText.value.trim();
+    if (!text) return null;
+    return { data: text, label: text.replace(/\s+/g, " ") };
+  }
+
+  // ---------- UPDATE QR ----------
+  function updateQR() {
+    const result = getCurrentData();
+
+    if (!result) {
+      emptyState.classList.remove("is-hidden");
+      qrWrap.classList.add("is-hidden");
+      previewActions.classList.add("is-hidden");
+      qrWrap.innerHTML = "";
+      return;
+    }
+
     const size = parseInt(inputSize.value, 10);
     const ec = ecLevelMap(inputEc.value);
     const fg = inputFg.value;
     const bg = inputBg.value;
 
-    // Clear previous QR
     qrWrap.innerHTML = "";
-
-    qrInstance = new QRCode(qrWrap, {
-      text: data,
+    new QRCode(qrWrap, {
+      text: result.data,
       width: size,
       height: size,
       colorDark: fg,
@@ -158,17 +154,29 @@
       correctLevel: ec,
     });
 
-    // Reveal preview, hide empty state
     emptyState.classList.add("is-hidden");
     qrWrap.classList.remove("is-hidden");
     previewActions.classList.remove("is-hidden");
 
-    // Trigger scan-line animation
+    previewSource.innerHTML =
+      "<b>" + (mode === "url" ? "URL" : "Teks") + "</b>" +
+      escapeHtml(truncateLabel(result.label, 46));
+
     scanLine.classList.remove("is-scanning");
-    // restart animation
     void scanLine.offsetWidth;
     scanLine.classList.add("is-scanning");
   }
+
+  // ---------- EVENT LISTENERS ----------
+
+  const debouncedUpdate = debounce(updateQR, 400);
+  inputUrl.addEventListener("input", debouncedUpdate);
+  inputText.addEventListener("input", debouncedUpdate);
+
+  inputSize.addEventListener("change", updateQR);
+  inputEc.addEventListener("change", updateQR);
+  inputFg.addEventListener("input", updateQR);
+  inputBg.addEventListener("input", updateQR);
 
   // ---------- DOWNLOAD ----------
   btnDownload.addEventListener("click", function () {

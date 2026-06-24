@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR/// Generator</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="noise"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">QR</span><span class="brand-slash">///</span>
+      <span class="brand-name">GENERATOR</span>
+    </div>
+    <div class="topbar-meta">
+      <span class="dot"></span> READY
+    </div>
+  </header>
+
+  <main class="layout">
+
+    <!-- LEFT: INPUT PANEL -->
+    <section class="panel panel-input">
+      <div class="panel-label"><span>01</span> SUMBER DATA</div>
+
+      <div class="tabs" role="tablist">
+        <button class="tab is-active" data-mode="url" role="tab">URL</button>
+        <button class="tab" data-mode="text" role="tab">TEKS BEBAS</button>
+      </div>
+
+      <form id="qr-form" autocomplete="off">
+
+        <div class="field" data-field="url">
+          <label for="input-url">Alamat tautan</label>
+          <input type="text" id="input-url" placeholder="contoh.com/halaman" inputmode="url">
+          <p class="hint">Boleh tanpa https:// — akan ditambahkan otomatis.</p>
+        </div>
+
+        <div class="field is-hidden" data-field="text">
+          <label for="input-text">Isi teks</label>
+          <textarea id="input-text" placeholder="Tulis catatan, pesan, atau teks apa pun di sini…" rows="5" maxlength="1500"></textarea>
+          <p class="hint"><span id="char-count">0</span> / 1500 karakter</p>
+        </div>
+
+        <div class="field-row">
+          <div class="field-small">
+            <label for="input-size">Ukuran</label>
+            <select id="input-size">
+              <option value="220">Kecil — 220px</option>
+              <option value="320" selected>Sedang — 320px</option>
+              <option value="420">Besar — 420px</option>
+            </select>
+          </div>
+          <div class="field-small">
+            <label for="input-ec">Toleransi error</label>
+            <select id="input-ec">
+              <option value="L">Rendah</option>
+              <option value="M" selected>Sedang</option>
+              <option value="Q">Tinggi</option>
+              <option value="H">Maksimal</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field-small">
+            <label for="input-fg">Warna kode</label>
+            <div class="color-input">
+              <input type="color" id="input-fg" value="#14171c">
+              <span id="input-fg-hex">#14171C</span>
+            </div>
+          </div>
+          <div class="field-small">
+            <label for="input-bg">Warna latar</label>
+            <div class="color-input">
+              <input type="color" id="input-bg" value="#f2efe6">
+              <span id="input-bg-hex">#F2EFE6</span>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-generate">
+          <span>Buat QR Code</span>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+
+        <p class="error-msg" id="error-msg"></p>
+      </form>
+    </section>
+
+    <!-- RIGHT: PREVIEW PANEL -->
+    <section class="panel panel-preview">
+      <div class="panel-label"><span>02</span> HASIL</div>
+
+      <div class="preview-stage">
+        <div class="preview-frame" id="preview-frame">
+          <div class="corner corner-tl"></div>
+          <div class="corner corner-tr"></div>
+          <div class="corner corner-bl"></div>
+          <div class="corner corner-br"></div>
+
+          <div class="scan-line" id="scan-line"></div>
+
+          <div class="empty-state" id="empty-state">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="3" width="7" height="7" stroke="currentColor" stroke-width="1.4"/>
+              <rect x="14" y="3" width="7" height="7" stroke="currentColor" stroke-width="1.4"/>
+              <rect x="3" y="14" width="7" height="7" stroke="currentColor" stroke-width="1.4"/>
+              <path d="M14 14h3v3M14 21v-3M21 14v3M18 21h3" stroke="currentColor" stroke-width="1.4"/>
+            </svg>
+            <p>Belum ada kode.<br>Isi data di sebelah kiri lalu klik "Buat QR Code".</p>
+          </div>
+
+          <div id="qr-canvas-wrap" class="is-hidden"></div>
+        </div>
+
+        <div class="preview-actions is-hidden" id="preview-actions">
+          <div class="preview-source" id="preview-source"></div>
+          <button class="btn-download" id="btn-download">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2v8m0 0L5 7m3 3l3-3M3 13h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Unduh PNG
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footnote">
+    Diproses sepenuhnya di perangkat Anda — tidak ada data yang dikirim ke server.
+  </footer>
+
+  <script src="qrcode.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

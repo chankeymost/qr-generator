@@ -24,6 +24,7 @@
   const btnDownload = document.getElementById("btn-download");
 
   let mode = "url";
+  let hasQR = false;
 
   // ---------- DEBOUNCE ----------
   function debounce(fn, delay) {
@@ -132,6 +133,7 @@
     const result = getCurrentData();
 
     if (!result) {
+      hasQR = false;
       emptyState.classList.remove("is-hidden");
       qrWrap.classList.add("is-hidden");
       previewActions.classList.add("is-hidden");
@@ -139,6 +141,7 @@
       return;
     }
 
+    hasQR = true;
     const size = parseInt(inputSize.value, 10);
     const ec = ecLevelMap(inputEc.value);
     const fg = inputFg.value;
@@ -173,10 +176,10 @@
   inputUrl.addEventListener("input", debouncedUpdate);
   inputText.addEventListener("input", debouncedUpdate);
 
-  inputSize.addEventListener("change", updateQR);
-  inputEc.addEventListener("change", updateQR);
-  inputFg.addEventListener("input", updateQR);
-  inputBg.addEventListener("input", updateQR);
+  inputSize.addEventListener("change", () => hasQR && updateQR());
+  inputEc.addEventListener("change", () => hasQR && updateQR());
+  inputFg.addEventListener("input", () => hasQR && updateQR());
+  inputBg.addEventListener("input", () => hasQR && updateQR());
 
   // ---------- DOWNLOAD ----------
   btnDownload.addEventListener("click", function () {

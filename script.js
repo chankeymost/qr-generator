@@ -22,6 +22,7 @@
   const previewActions = document.getElementById("preview-actions");
   const previewSource = document.getElementById("preview-source");
   const btnDownload = document.getElementById("btn-download");
+  const btnCopy = document.getElementById("btn-copy");
 
   let mode = "url";
   let hasQR = false;
@@ -202,6 +203,40 @@
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  });
+
+  // ---------- COPY IMAGE ----------
+  btnCopy.addEventListener("click", async function () {
+    if (!hasQR) return;
+
+    const img = qrWrap.querySelector("img");
+    const canvas = qrWrap.querySelector("canvas");
+
+    let dataUrl = null;
+    if (img && img.src) {
+      dataUrl = img.src;
+    } else if (canvas) {
+      dataUrl = canvas.toDataURL("image/png");
+    }
+
+    if (!dataUrl) return;
+
+    try {
+      const blob = await fetch(dataUrl).then(r => r.blob());
+      await navigator.clipboard.write([
+        new ClipboardItem({ "image/png": blob }),
+      ]);
+
+      const orig = btnCopy.innerHTML;
+      btnCopy.innerHTML =
+        '<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3 3 7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+        " Tersalin!";
+      setTimeout(() => {
+        btnCopy.innerHTML = orig;
+      }, 2000);
+    } catch (_err) {
+      showError("Gagal menyalin gambar ke clipboard.");
+    }
   });
 
 })();

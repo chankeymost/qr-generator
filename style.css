@@ -387,7 +387,6 @@ input[type="text"]:focus, textarea:focus, select:focus{
   max-width: 420px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 14px;
   margin-top: 22px;
 }
@@ -428,6 +427,31 @@ input[type="text"]:focus, textarea:focus, select:focus{
   transition: background 0.15s ease;
 }
 .btn-download:hover{ background: var(--teal); }
+
+.preview-btn-group{
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.btn-copy{
+  flex-shrink: 0;
+  background: var(--teal);
+  color: var(--paper);
+  border: none;
+  border-radius: 8px;
+  padding: 11px 18px;
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.btn-copy:hover{ background: #2f4942; }
 
 /* ---------------- FOOTNOTE ---------------- */
 .footnote{

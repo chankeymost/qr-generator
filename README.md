@@ -18,13 +18,7 @@ QR Generator statis (tanpa build step, tanpa framework) berbasis browser.
 
 ## Cara pakai
 
-Buka `index.html` langsung di browser, atau jalankan server lokal:
-
-```sh
-python3 -m http.server 8000
-```
-
-lalu buka `http://localhost:8000`.
+Buka `index.html` langsung di browser, atau gunakan live server bawaan editor/IDE.
 
 ## Lisensi
 

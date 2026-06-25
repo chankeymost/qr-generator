@@ -169,6 +169,9 @@
     scanLine.classList.remove("is-scanning");
     void scanLine.offsetWidth;
     scanLine.classList.add("is-scanning");
+    setTimeout(() => {
+      scanLine.classList.remove("is-scanning");
+    }, 1100);
   }
 
   // ---------- EVENT LISTENERS ----------
@@ -222,7 +225,23 @@
     if (!dataUrl) return;
 
     try {
-      const blob = await fetch(dataUrl).then(r => r.blob());
+      const padding = 20;
+      const blob = await new Promise((resolve, reject) => {
+        const imgEl = new Image();
+        imgEl.onerror = reject;
+        imgEl.onload = () => {
+          const c = document.createElement("canvas");
+          c.width = imgEl.width + padding * 2;
+          c.height = imgEl.height + padding * 2;
+          const ctx = c.getContext("2d");
+          ctx.fillStyle = inputBg.value;
+          ctx.fillRect(0, 0, c.width, c.height);
+          ctx.drawImage(imgEl, padding, padding);
+          c.toBlob((b) => resolve(b), "image/png");
+        };
+        imgEl.src = dataUrl;
+      });
+
       await navigator.clipboard.write([
         new ClipboardItem({ "image/png": blob }),
       ]);

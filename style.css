@@ -453,6 +453,44 @@ input[type="text"]:focus, textarea:focus, select:focus{
 }
 .btn-copy:hover{ background: #2f4942; }
 
+/* ---------------- EC INFO TABLE ---------------- */
+.ec-info{
+  margin-top: 22px;
+  padding: 14px;
+  background: rgba(20,23,28,0.03);
+  border-radius: 8px;
+}
+.ec-info__title{
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--teal);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.ec-info__table{
+  width: 100%;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  border-collapse: collapse;
+}
+.ec-info__table td{
+  padding: 5px 0;
+  border-bottom: 1px solid var(--line);
+}
+.ec-info__table tr:last-child td{
+  border-bottom: none;
+}
+.ec-info__code{
+  color: var(--signal);
+  font-weight: 700;
+  width: 24px;
+}
+.ec-info__pct{
+  color: var(--ink-soft);
+  width: 36px;
+}
+
 /* ---------------- FOOTNOTE ---------------- */
 .footnote{
   text-align: center;

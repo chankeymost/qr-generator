@@ -9,9 +9,9 @@ Proyek statis (tanpa build step, tanpa framework) yang generate QR code dari **U
 
 ```
 qr-generator/
-├── index.html      (139 baris) — struktur & semua elemen UI
-├── style.css       (453 baris) — desain visual lengkap
-├── script.js       (196 baris) — semua logika & interaktivitas
+├── index.html      (166 baris) — struktur & semua elemen UI
+├── style.css       (517 baris) — desain visual lengkap
+├── script.js       (261 baris) — semua logika & interaktivitas
 └── qrcode.min.js   (library pihak ketiga, JANGAN diedit)
 ```
 
@@ -21,11 +21,11 @@ Tidak ada dependency npm, tidak ada server backend. Buka `index.html` langsung d
 
 Identitas visual proyek ini bertema **"scanner/instrumen teknis"** — bukan kartu generik. Elemen kunci yang membentuk identitas ini:
 
-- **Palet warna** (didefinisikan sebagai CSS custom properties di `:root` pada `style.css`): `--ink` (#14171c, hampir hitam), `--paper` (#f2efe6, krem), `--signal` (#ff5a1f, oranye sebagai warna aksen/CTA), `--teal` (#3d5a52, aksen sekunder). **Selalu pakai variabel ini**, jangan hardcode hex baru kecuali memang menambah token baru ke `:root`.
+- **Palet warna** (didefinisikan sebagai CSS custom properties di `:root` pada `style.css`): `--ink` (#14171c, hampir hitam), `--paper` (#f2efe6, krem), `--signal` (#ff5a1f, oranye sebagai warna aksen/CTA), `--teal` (#3d5a52, aksen sekunder). **Selalu pakai variabel ini**, jangan hardcode hex baru kecuali memang menambah token baru ke `:root`. Warna latar barcode default adalah putih (`#ffffff`) — diatur via `<input type="color" id="input-bg">`.
 - **Tipografi**: `JetBrains Mono` untuk label, tombol, data teknis (kode/URL) — `Inter` untuk teks naratif (hint, deskripsi). Pertahankan pembagian ini; jangan campur sembarangan.
-- **Signature element**: garis scan oranye (`.scan-line`) yang menyapu dari atas ke bawah preview QR setiap kali tombol generate ditekan (lihat animasi `@keyframes sweep`). Ini adalah elemen pembeda utama proyek — pertahankan saat refactor.
+- **Signature element**: garis scan oranye (`.scan-line`) yang menyapu dari atas ke bawah preview QR setiap kali QR digenerate (dipicu otomatis saat input berubah, lihat animasi `@keyframes sweep`). Ini adalah elemen pembeda utama proyek — pertahankan saat refactor.
 - **Sudut bingkai** (`.corner-tl/tr/bl/br`) di sekitar area preview mengimitasi viewfinder kamera/scanner. Bagian dari tema yang sama.
-- Tombol generate punya **shadow offset solid** (`box-shadow: 4px 4px 0 var(--ink)`) yang mengecil saat ditekan (`:active` → translate) untuk efek "tombol fisik". Pertahankan pola ini untuk tombol-tombol baru yang setara pentingnya.
+- Tombol aksi utama (`.btn-download`, `.btn-copy`) punya **shadow offset solid** (`box-shadow: 4px 4px 0 var(--ink)`) yang mengecil saat ditekan (`:active` → translate) untuk efek "tombol fisik". Pertahankan pola ini untuk tombol-tombol baru yang setara pentingnya.
 
 Jika menambah fitur baru, turunkan gaya dari token-token di atas, bukan membuat palet/font baru.
 
@@ -37,8 +37,11 @@ Semua logika dibungkus dalam satu IIFE `(function(){...})()` agar tidak mencemar
 2. **Tab switching** (`mode = "url" | "text"`) — toggle `.is-hidden` pada `fieldUrl` / `fieldText`. State mode disimpan di variabel `mode` level-modul.
 3. **`normalizeUrl(raw)`** — menambahkan `https://` otomatis jika user tidak mengetik skema, lalu validasi dengan `new URL()`. Return `null` kalau invalid.
 4. **`generateQR(data)`** — inti generator. Membersihkan `qrWrap.innerHTML`, lalu instansiasi `new QRCode(qrWrap, {...})` dari library `qrcode.min.js`. Opsi yang dibaca dari form: `width/height` (dari `#input-size`), `colorDark/colorLight` (dari color picker), `correctLevel` (lewat `ecLevelMap()`).
-5. **Animasi scan-line** — di-trigger ulang dengan trik `void scanLine.offsetWidth` (force reflow) sebelum menambahkan class `is-scanning`, supaya animasi CSS restart setiap klik, bukan cuma sekali.
-6. **Download PNG** (`btnDownload` listener) — library `qrcode.js` versi ini merender ke `<img>` (bukan langsung `<canvas>` di semua kasus), jadi kode cek `img.src` dulu, fallback ke `canvas.toDataURL()`.
+5. **Auto-generate via debounce** — tidak ada tombol generate. Listener `input` pada `inputUrl` / `inputText` memicu `debouncedUpdate` (300ms). Begitu user selesai mengetik, QR langsung digenerate ulang.
+6. **Flag `hasQR`** — variabel boolean modul yang `true` setelah QR pertama berhasil dibuat. Input seperti size, EC level, dan warna hanya memicu re-generate jika `hasQR === true` (cegah error empty-state di awal).
+7. **Animasi scan-line** — di-trigger ulang dengan trik `void scanLine.offsetWidth` (force reflow) sebelum menambahkan class `is-scanning`, supaya animasi CSS restart setiap kali. Setelah 1100ms, `setTimeout` menghapus class `is-scanning` agar animasi tidak menggantung.
+8. **Download PNG** (`btnDownload` listener) — library `qrcode.js` versi ini merender ke `<img>` (bukan langsung `<canvas>` di semua kasus), jadi kode cek `img.src` dulu, fallback ke `canvas.toDataURL()`.
+9. **Copy image** (`btnCopy` listener) — mengambil `img.src` atau `canvas.toDataURL()`, lalu menggambar ulang di canvas sementara dengan padding 20px dan warna latar dari `inputBg`. Hasilnya dikonversi ke `Blob` dan disalin ke clipboard via `navigator.clipboard.write([new ClipboardItem(...)])`. Tombol menampilkan "Tersalin!" sebagai feedback selama 2 detik. Jika gagal, `showError()` dipanggil.
 
 ### Library QR pihak ketiga
 
@@ -71,6 +74,15 @@ Kapasitas data QR terbatas oleh `correctLevel` — level lebih tinggi (`H`) = le
 
 **Bug umum: animasi scan-line tidak jalan saat generate dua kali berturut-turut**
 - Pastikan trik `void scanLine.offsetWidth` sebelum `classList.add("is-scanning")` tidak terhapus saat refactor — tanpa ini, browser menganggap animasi "sudah berjalan" dan tidak mengulang dari awal.
+
+**Menambah tombol aksi baru (di samping Unduh/Copy)**
+1. Tambah `<button>` di `index.html` dalam `.preview-btn-group`.
+2. Gunakan SVG inline sebagai ikon (lihat `btn-download` / `btn-copy` sebagai template).
+3. Di `script.js`, tambahkan ref elemen di blok element refs, lalu listener.
+4. Jika butuh feedback visual, pakai pola temporal toggle seperti `btnCopy.innerHTML = "... Tersalin!"` + `setTimeout` untuk reset.
+
+**Menambah / mengedit tabel info EC (error correction)**
+- Cukup edit HTML di `.ec-info` — CSS sudah siap untuk tabel 4 baris (L/M/Q/H). Jika menambah baris, perhatikan `tr:last-child td` di CSS agar border bawah tidak dobel.
 
 **Menambah validasi input baru**
 - Pakai pola `showError(msg)` / `clearError()` yang sudah ada — tampilkan pesan di `#error-msg`, jangan pakai `alert()` (memutus tema, mengganggu UX).
